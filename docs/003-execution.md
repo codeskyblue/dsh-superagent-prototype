@@ -18,6 +18,8 @@ Each open Ticket has one stage, determined by what it is waiting for. Read the t
 
 A `person` stage means the Ticket cannot continue without human input. A new human message releases a `blocked` or `failed` Ticket to its Executor, so it moves to the next matching stage, usually `working`.
 
+When a person on the allowed list mentions the agent on GitHub, the host adds a 😄 reaction to that message as soon as the Trigger is received, before any Ticket or Session exists. The reaction says the message arrived; it is not an acceptance, grants no authority, and the Executor's acknowledgement still follows.
+
 An `idle` Ticket has finished its turn without an outstanding question. A Trigger on a subscribed Thread can continue it.
 
 ## The Executor
