@@ -18,6 +18,7 @@ import { allowedSender, settingsPolicy } from '../policy.ts'
 import { SourceRegistry } from '../sources/registry.ts'
 import { Commands } from '../infra/commands.ts'
 import type { Deployment, Machine } from '../deployment.ts'
+import { acknowledgeGithub } from './acknowledge.ts'
 import { environmentOf, ticketEnvironment, type Variable } from './execution-environment.ts'
 import type { SetupProblem } from '../setup.ts'
 import { DshExecutor, sourceTrigger, triggerMessage, workerSessionId } from '../executor/dsh.ts'
@@ -136,6 +137,11 @@ export class Runtime extends Service implements SourceHost {
       const policy = () => settingsPolicy(store.settings(), sources)
       const engine = this.engine = new Engine({ repo: store, scope: sources, policy, assessor, executor,
         outbox, prepareTicket: (ticket, outcome) => executor.prepare(ticket, outcome), emit: event => {
+          // Mark a GitHub message from an allowed person as seen before any Session starts, so a wait for the result shows the agent took it.
+          if (event.type === 'trigger.received') {
+            const trigger = store.triggers.get(event.data.triggerId)
+            if (trigger) void acknowledgeGithub(store.settings(), commands, trigger).catch(() => { /* The reaction is a courtesy; the Ticket never waits for it. */ })
+          }
           // Notify the main Session only about domain events it did not initiate itself.
           const notice = this.quiet ? undefined : eventNotice(event, id => store.tickets.get(id))
           if (notice) sessions.notify(...notice)
